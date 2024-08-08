@@ -42,18 +42,18 @@ http://localhost:3000/api
 #### Auth
 This module use Postment to testing
 - [**POST**] Login: http://localhost:3000/auth/login
-*Login success will set accessToken, refreshToken into httpOnly-Cookie*
+	*Login success will set accessToken, refreshToken into httpOnly-Cookie*
 - [**GET**] User Info: http://localhost:3000/auth/info
-*Get UserInfo , this API use AuthGuard to Authenticate*
+	*Get UserInfo , this API use AuthGuard to Authenticate*
 - [**POST**] Register: http://localhost:3000/auth/register
-*After register, must login to authenticate*
+	*After register, must login to authenticate*
 - [**GET**] Refresh-token: http://localhost:3000/auth/refresh-token
-*Recreate accessToken. If fail, please login again to authenticate*
+	*Recreate accessToken. If fail, please login again to authenticate*
 - [**GET**] Google Login : http://localhost:3000/api/login-google
 
 #### XML
 - [**GET**] Booking Information: http://localhost:3000/booking/:confirmCode
-*Get Booking info from XML file, logic read XML which i will explain below*
+	*Get Booking info from XML file, logic read XML which i will explain below*
 
 #### Payment
 Please use browser to testing
@@ -63,10 +63,9 @@ Please use browser to testing
 			After payment, VCB Payment Web will redirect you to my result page!*
 
 ## XML-Algorithm
-*Apologize for result of XML can be not match with test case, because i don't understand business of Booking XML and don't have sample XML match result of this XML.
-Use http://localhost:3000/booking/218177/raw , to see result when parse entire XML to JSON
-*
-I will explain result before i discuss about algorithm
+- *Apologize for result of XML can be not match with test case, because i don't understand business of Booking XML and don't have sample XML match result of this XML.
+Use http://localhost:3000/booking/218177/raw , to see result when parse entire XML to JSON*
+- I will explain result before i discuss about algorithm
 In result you will see data with format: 
 ```
 "attribute": {
