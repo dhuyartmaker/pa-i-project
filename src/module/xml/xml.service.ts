@@ -10,7 +10,7 @@ const TAG_TYPE = {
 
 @Injectable()
 class XmlService {
-  constructor() {}
+  constructor() { }
 
   isSingleTag(text: string) {
     return text.match(new RegExp('(\<.*/\>)', 'g'))
@@ -37,10 +37,10 @@ class XmlService {
   }
 
   getAttributesInTag(text: string) {
-    let removeSymbol = text.substring(1, text.length - 1); 
+    let removeSymbol = text.substring(1, text.length - 1);
     const splitTextBySpace = removeSymbol.split(" ");
-    let result : any = {};
-    for (let i = 1; i < splitTextBySpace.length - 1; i += 1) {
+    let result: any = {};
+    for (let i = 1; i < splitTextBySpace.length; i += 1) {
       const positionEqualSymbol = splitTextBySpace[i].indexOf("=");
       result = {
         ...result,
@@ -52,7 +52,7 @@ class XmlService {
   }
 
   getAttribute(text: string) {
-    let removeSymbol = text.substring(1, text.length - 1); 
+    let removeSymbol = text.substring(1, text.length - 1);
     const splitTextBySpace = removeSymbol.split(" ");
     return splitTextBySpace[0]
   }
@@ -62,18 +62,19 @@ class XmlService {
     const stackAttribute = [];
     const stackJson = [];
 
-    const countChildNode : Record<string,number[]> = {};
+    const countChildNode: Record<string, number[]> = {};
 
-    let openTagBefore = '';
+    let popAttr = null;
+    let singleTagBefore = ''
+
     while (indPosition < stringXml.length) {
       const start = stringXml.indexOf('<', indPosition)
       const end = stringXml.indexOf('>', start);
       const subString = stringXml.substring(start, end + 1);
       const typeTag = this.type(subString);
       let curAtt = this.getAttribute(subString);
-
-      switch(typeTag) {
-        case TAG_TYPE.SINGLE:  {
+      switch (typeTag) {
+        case TAG_TYPE.SINGLE: {
           const getInnterTag = this.getAttributesInTag(subString);
           stackJson.push({
             [`${curAtt}`]: {
@@ -81,19 +82,17 @@ class XmlService {
             }
           })
 
-          const isChildArray = 
-            stackAttribute.length && `${curAtt}` == stackAttribute[stackAttribute.length - 1].name
-              
+          const isChildArray = curAtt == singleTagBefore;
+
           if (isChildArray) {
-            console.log('==stackAttribute[stackAttribute.length - 2]==', stackAttribute[stackAttribute.length - 2])
-            stackAttribute[stackAttribute.length - 2].isArray = true
+            stackAttribute[stackAttribute.length - 1].isArray = true
           }
           if (stackAttribute.length) {
             const beforeTag = `${stackAttribute[stackAttribute.length - 1].name}`;
             countChildNode[beforeTag][countChildNode[beforeTag].length - 1] += 1
           }
-          countChildNode[`${curAtt}`] = countChildNode[`${curAtt}`] ? [...countChildNode[`${curAtt}`], 0] : [0]; 
-
+          countChildNode[`${curAtt}`] = countChildNode[`${curAtt}`] ? [...countChildNode[`${curAtt}`], 0] : [0];
+          singleTagBefore = curAtt;
           break;
         }
         case TAG_TYPE.OPEN: {
@@ -103,25 +102,22 @@ class XmlService {
               innerTag: { ...getInnterTag }
             }
           })
-          const isChildArray = curAtt == openTagBefore
-            // stackAttribute.length && `${curAtt}` == stackAttribute[stackAttribute.length - 1].name
-              
+          const isChildArray = curAtt == popAttr?.name
+
           if (isChildArray) {
-            console.log('==s==', curAtt, stackAttribute[stackAttribute.length - 2])
-            stackAttribute[stackAttribute.length - 2].isArray = true
+            stackAttribute[stackAttribute.length - 1].isArray = true
           }
           if (stackAttribute.length) {
             const beforeTag = `${stackAttribute[stackAttribute.length - 1].name}`;
             countChildNode[beforeTag][countChildNode[beforeTag].length - 1] += 1
           }
-          countChildNode[`${curAtt}`] = countChildNode[`${curAtt}`] ? [...countChildNode[`${curAtt}`], 0] : [0]; 
+          countChildNode[`${curAtt}`] = countChildNode[`${curAtt}`] ? [...countChildNode[`${curAtt}`], 0] : [0];
           stackAttribute.push({ name: curAtt, typeTag })
 
-          openTagBefore = curAtt;
           break;
         }
         case TAG_TYPE.CLOSE: { // Close case
-          const popAttr = stackAttribute.pop();
+          popAttr = stackAttribute.pop();
           const isClosingArray = !!popAttr.isArray
 
           curAtt = curAtt.substring(1, curAtt.length);
@@ -133,30 +129,31 @@ class XmlService {
               const obj = stackJson.pop();
               acc.push(obj)
               return acc;
-            },[])
+            }, [])
             : Array(childCount).fill(1).reduce((acc, item) => {
-            const obj = stackJson.pop();
-            return {
-              ...acc,
-              ...obj
-            }
-          }, {})
+              const obj = stackJson.pop();
+              return {
+                ...acc,
+                ...obj
+              }
+            }, {})
 
           const popInnerTag = stackJson.pop()
           const getInnerTag = popInnerTag && popInnerTag[`${curAtt}`]?.innerTag ? {
             ...popInnerTag[`${curAtt}`]?.innerTag
           } : {}
 
-          stackJson.push({ [`${curAtt}`]: isClosingArray
-            ? {
-                "innerTag": {...getInnerTag},
-                "array": [...popObjectJson ]
+          stackJson.push({
+            [`${curAtt}`]: isClosingArray
+              ? {
+                "innerTag": { ...getInnerTag },
+                "array": [...popObjectJson]
               }
-            : {
-              "innerTag": {...getInnerTag},
-              innerValue: stringXml.substring(indPosition, start).trim().replace(/\r\n/g, ''),
-              ...popObjectJson,
-            }
+              : {
+                "innerTag": { ...getInnerTag },
+                innerValue: stringXml.substring(indPosition, start).trim().replace(/\r\n/g, ''),
+                ...popObjectJson,
+              }
           })
 
           break;
@@ -174,47 +171,103 @@ class XmlService {
 
   queryObject(obj, query) {
     const keys = query.split('.'); // Tách các phần của query theo dấu "."
-    let current = obj;
 
-    for (let key of keys) {
-        current = this.findKeyInObject(current, key);
-        if (current === undefined) {
-            return undefined;
+    function findValue(currentObj, remainingKeys) {
+      if (!currentObj || remainingKeys.length === 0) return undefined;
+
+      const [key, ...restKeys] = remainingKeys;
+
+      // Nếu currentObj là mảng, duyệt qua từng phần tử của mảng
+      if (Array.isArray(currentObj)) {
+        for (let item of currentObj) {
+          const found = findValue(item, remainingKeys);
+          if (found !== undefined) return found;
         }
+        return undefined;
+      }
+
+      // Nếu key tồn tại trong currentObj, tiếp tục tìm kiếm trong phần con
+      if (key in currentObj) {
+        if (restKeys.length === 0) {
+          return currentObj[key]; // Nếu đây là key cuối cùng, trả về giá trị
+        }
+        return findValue(currentObj[key], restKeys);
+      }
+
+      // Nếu key không tồn tại ở cấp hiện tại, tiếp tục tìm kiếm trong các phần con
+      for (let subKey in currentObj) {
+        if (typeof currentObj[subKey] === 'object') {
+          const found = findValue(currentObj[subKey], remainingKeys);
+          if (found !== undefined) return found;
+        }
+      }
+
+      return undefined;
     }
 
-    return current;
+    return findValue(obj, keys);
   }
 
-  findKeyInObject(obj, key) {
-    if (obj.hasOwnProperty(key)) {
-        return obj[key];
-    }
 
-    for (let k in obj) {
-        if (typeof obj[k] === 'object' && obj[k] !== null) {
-            const found = this.findKeyInObject(obj[k], key);
-            if (found !== undefined) {
-                return found;
-            }
-        }
-    }
-
-    return undefined;
-  }
-
-
-  async read(file: string) {
-    const absolutePath = path.join('xml_files', file);
+  async read(bookingCode: string) {
+    const absolutePath = path.join('xml_files', `booking_${bookingCode}.xml`);
     const readXml = readFileSync(absolutePath, 'utf8');
 
     let stringXml = `${readXml.trim()}`.replace(/(\<\?.*\?\>)/g, ''); // Remove head <?*?>
 
     const result = this.processingXml(stringXml);
 
-    console.log(this.queryObject(result, "r:UniqueIDList"))
+    const resv_name_id = (this.queryObject(result, "r:UniqueIDList")?.array || []).find(item =>
+      item["c:UniqueID"].innerTag.source == "RESVID"
+    )
+    const arrival = this.queryObject(result, "r:ArrivalTransport")?.innerTag?.time
+    const departure = this.queryObject(result, "r:DepartureTransport")?.innerTag?.time
+    const adult = (this.queryObject(result, "hc:GuestCounts")?.array || []).find(item =>
+      item["hc:GuestCount"].innerTag.ageQualifyingCode == "ADULT"
+    )
+    const child = (this.queryObject(result, "hc:GuestCounts")?.array || []).find(item =>
+      item["hc:GuestCount"].innerTag.ageQualifyingCode == "CHILD"
+    )
+    const roomtype = this.queryObject(result, "hc:RoomType")?.innerTag.roomTypeCode
+    const ratecode = this.queryObject(result, "hc:RoomRate")?.innerTag.ratePlanCode
+    const rateamount = {
+      amount: this.queryObject(result, "hc:RoomRate.hc:Base")?.innerValue,
+      currency: this.queryObject(result, "hc:RoomRate.hc:Base")?.innerTag.currencyCode
+    }
+    const guarantee = this.queryObject(result, "hc:Guarantee")?.innerTag.guaranteeType
+    const method_payment = this.queryObject(result, "hc:Payment.hc:OtherPayment")?.innerTag.type
+    const computed_resv_status = this.queryObject(result, "HotelReservation")?.innerTag.computedReservationStatus
+    const last_name = this.queryObject(result, "c:lastName")?.innerValue
+    const first_name = this.queryObject(result, "c:firstName")?.innerValue
+    const title = this.queryObject(result, "c:nameTitle")?.innerValue || ""
+    const booking_balance = this.queryObject(result, "hc:CurrentBalance")?.innerValue
+    const booking_created_date = this.queryObject(result, "hc:StartDate")?.innerValue
+    const phone_number = this.queryObject(result, "c:PhoneNumber")?.innerValue
+    const email = this.queryObject(result, "c:Email")?.innerValue
 
-    return result;
+    const bookingInfo = {
+      "confirmation_no": bookingCode,
+      "resv_name_id": resv_name_id["c:UniqueID"].innerValue,
+      arrival,
+      departure,
+      adult: adult["hc:GuestCount"].innerTag.count,
+      child: child["hc:GuestCount"].innerTag.count,
+      roomtype,
+      ratecode,
+      rateamount,
+      guarantee,
+      method_payment,
+      computed_resv_status,
+      last_name,
+      first_name,
+      title,
+      booking_balance,
+      booking_created_date,
+      phone_number,
+      email
+    }
+
+    return bookingInfo;
   }
 }
 
