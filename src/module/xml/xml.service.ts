@@ -36,20 +36,18 @@ class XmlService {
     }
   }
 
-  getAttributesInTag(text: string, nested: any) {
+  getAttributesInTag(text: string) {
     let removeSymbol = text.substring(1, text.length - 1); 
     const splitTextBySpace = removeSymbol.split(" ");
     let result : any = {};
-    result[`${splitTextBySpace[0]}`] = {};
     for (let i = 1; i < splitTextBySpace.length - 1; i += 1) {
       const positionEqualSymbol = splitTextBySpace[i].indexOf("=");
-      result[`${splitTextBySpace[0]}`] = {
-        ...result[`${splitTextBySpace[0]}`],
+      result = {
+        ...result,
         [`${splitTextBySpace[i].substring(0, positionEqualSymbol)}`]: splitTextBySpace[i].substring(positionEqualSymbol + 2, splitTextBySpace[i].length - 1)
       }
     }
 
-    result[`${splitTextBySpace[0]}`] = { ...result[`${splitTextBySpace[0]}`], ...nested }
     return result;
   }
 
@@ -63,14 +61,10 @@ class XmlService {
     let indPosition = 0;
     const stackAttribute = [];
     const stackJson = [];
-    let stackArray = [];
-    let isArray = {};
-    const countChildNode = {};
 
-    let result = {};
-    let attBefore = '';
-    let tagBefore = null;
+    const countChildNode : Record<string,number[]> = {};
 
+    let openTagBefore = '';
     while (indPosition < stringXml.length) {
       const start = stringXml.indexOf('<', indPosition)
       const end = stringXml.indexOf('>', start);
@@ -80,35 +74,67 @@ class XmlService {
 
       switch(typeTag) {
         case TAG_TYPE.SINGLE:  {
+          const getInnterTag = this.getAttributesInTag(subString);
+          stackJson.push({
+            [`${curAtt}`]: {
+              innerTag: { ...getInnterTag }
+            }
+          })
+
+          const isChildArray = 
+            stackAttribute.length && `${curAtt}` == stackAttribute[stackAttribute.length - 1].name
+              
+          if (isChildArray) {
+            console.log('==stackAttribute[stackAttribute.length - 2]==', stackAttribute[stackAttribute.length - 2])
+            stackAttribute[stackAttribute.length - 2].isArray = true
+          }
+          if (stackAttribute.length) {
+            const beforeTag = `${stackAttribute[stackAttribute.length - 1].name}`;
+            countChildNode[beforeTag][countChildNode[beforeTag].length - 1] += 1
+          }
+          countChildNode[`${curAtt}`] = countChildNode[`${curAtt}`] ? [...countChildNode[`${curAtt}`], 0] : [0]; 
+
           break;
         }
         case TAG_TYPE.OPEN: {
-          const isArrays = curAtt == attBefore;
-
-          if (isArrays) {
-            isArray[`${curAtt}`] = true
-            stackArray.push(stackJson.pop())
+          const getInnterTag = this.getAttributesInTag(subString);
+          stackJson.push({
+            [`${curAtt}`]: {
+              innerTag: { ...getInnterTag }
+            }
+          })
+          const isChildArray = curAtt == openTagBefore
+            // stackAttribute.length && `${curAtt}` == stackAttribute[stackAttribute.length - 1].name
+              
+          if (isChildArray) {
+            console.log('==s==', curAtt, stackAttribute[stackAttribute.length - 2])
+            stackAttribute[stackAttribute.length - 2].isArray = true
           }
-
-          console.log('==stackArray==', stackArray, curAtt, attBefore)
           if (stackAttribute.length) {
-            countChildNode[`${stackAttribute[stackAttribute.length - 1].name}`] += 1
+            const beforeTag = `${stackAttribute[stackAttribute.length - 1].name}`;
+            countChildNode[beforeTag][countChildNode[beforeTag].length - 1] += 1
           }
-          countChildNode[`${curAtt}`] = 0; 
+          countChildNode[`${curAtt}`] = countChildNode[`${curAtt}`] ? [...countChildNode[`${curAtt}`], 0] : [0]; 
           stackAttribute.push({ name: curAtt, typeTag })
 
+          openTagBefore = curAtt;
           break;
         }
         case TAG_TYPE.CLOSE: { // Close case
-          curAtt = curAtt.substring(1, curAtt.length)
-          const childCount = countChildNode[`${curAtt}`];
+          const popAttr = stackAttribute.pop();
+          const isClosingArray = !!popAttr.isArray
 
-          const isClosingArray = !!(isArray[`${curAtt}`] && tagBefore === TAG_TYPE.CLOSE);
-          console.log('==isClosingArray==', isClosingArray, curAtt, childCount)
-          let popObjectJson = isClosingArray ? [
-            ...stackArray.slice(stackArray.length - childCount + 1, stackArray.length),
-            { [`${curAtt}`]: stackJson.pop() }
-          ] : Array(childCount).fill(1).reduce((acc, item) => {
+          curAtt = curAtt.substring(1, curAtt.length);
+          const childCount = countChildNode[`${curAtt}`][countChildNode[`${curAtt}`].length - 1];
+          countChildNode[`${curAtt}`].pop();
+
+          let popObjectJson = isClosingArray
+            ? Array(childCount).fill(1).reduce((acc, item) => {
+              const obj = stackJson.pop();
+              acc.push(obj)
+              return acc;
+            },[])
+            : Array(childCount).fill(1).reduce((acc, item) => {
             const obj = stackJson.pop();
             return {
               ...acc,
@@ -116,19 +142,22 @@ class XmlService {
             }
           }, {})
 
-          if (isClosingArray) {
-            stackArray = stackArray.slice(0, stackArray.length - childCount + 1)
-            isArray[`${curAtt}`] = false;
-          }
-          console.log('==stackArray=close==', stackArray)
-          console.log('==popObjectJson==', popObjectJson)
-          stackAttribute.pop()  
+          const popInnerTag = stackJson.pop()
+          const getInnerTag = popInnerTag && popInnerTag[`${curAtt}`]?.innerTag ? {
+            ...popInnerTag[`${curAtt}`]?.innerTag
+          } : {}
 
-          stackJson.push({ [`${curAtt}`]: isClosingArray ? popObjectJson : {
-            innerValue: stringXml.substring(indPosition, start).trim().replace(/\r\n/g, ''),
-            ...popObjectJson,
-          }})
-          console.log('==stackJson==', stackJson)
+          stackJson.push({ [`${curAtt}`]: isClosingArray
+            ? {
+                "innerTag": {...getInnerTag},
+                "array": [...popObjectJson ]
+              }
+            : {
+              "innerTag": {...getInnerTag},
+              innerValue: stringXml.substring(indPosition, start).trim().replace(/\r\n/g, ''),
+              ...popObjectJson,
+            }
+          })
 
           break;
         }
@@ -138,13 +167,42 @@ class XmlService {
 
       }
       indPosition = end + 1;
-      attBefore = curAtt;
-      tagBefore = typeTag;
-
     }
 
     return stackJson;
   }
+
+  queryObject(obj, query) {
+    const keys = query.split('.'); // Tách các phần của query theo dấu "."
+    let current = obj;
+
+    for (let key of keys) {
+        current = this.findKeyInObject(current, key);
+        if (current === undefined) {
+            return undefined;
+        }
+    }
+
+    return current;
+  }
+
+  findKeyInObject(obj, key) {
+    if (obj.hasOwnProperty(key)) {
+        return obj[key];
+    }
+
+    for (let k in obj) {
+        if (typeof obj[k] === 'object' && obj[k] !== null) {
+            const found = this.findKeyInObject(obj[k], key);
+            if (found !== undefined) {
+                return found;
+            }
+        }
+    }
+
+    return undefined;
+  }
+
 
   async read(file: string) {
     const absolutePath = path.join('xml_files', file);
@@ -152,7 +210,11 @@ class XmlService {
 
     let stringXml = `${readXml.trim()}`.replace(/(\<\?.*\?\>)/g, ''); // Remove head <?*?>
 
-    return this.processingXml(stringXml);
+    const result = this.processingXml(stringXml);
+
+    console.log(this.queryObject(result, "r:UniqueIDList"))
+
+    return result;
   }
 }
 

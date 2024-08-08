@@ -1,62 +1,19 @@
-<hc:Packages>
-    <hc:Package packageCode="IN-BF-B-A" source="RATE" packageGroupCode="IN-BF-A">
-        <hc:Description>
-            <c:Text>
-                <c:TextElement>Internal Beverage- Breakfast- Adult</c:TextElement>
-            </c:Text>
-        </hc:Description>
-        <hc:ShortDescription>
-            <c:Text>
-                <c:TextElement>Internal Beverage- Breakfast- Adult</c:TextElement>
-            </c:Text>
-        </hc:ShortDescription>
-    </hc:Package>
-    <hc:Package packageCode="IN-BF-B-C" source="RATE" packageGroupCode="IN-BF-C">
-        <hc:Description>
-            <c:Text>
-                <c:TextElement>Internal Beverage- Breakfast - Children</c:TextElement>
-            </c:Text>
-        </hc:Description>
-        <hc:ShortDescription>
-            <c:Text>
-                <c:TextElement>Internal Beverage- Breakfast - Children</c:TextElement>
-            </c:Text>
-        </hc:ShortDescription>
-    </hc:Package>
-    <hc:Package packageCode="IN-BF-F-A" source="RATE" packageGroupCode="IN-BF-A">
-        <hc:Description>
-            <c:Text>
-                <c:TextElement>Internal Food- Breakfast- Adult</c:TextElement>
-            </c:Text>
-        </hc:Description>
-        <hc:ShortDescription>
-            <c:Text>
-                <c:TextElement>Internal Food- Breakfast- Adult</c:TextElement>
-            </c:Text>
-        </hc:ShortDescription>
-    </hc:Package>
-    <hc:Package packageCode="IN-BF-F-C" source="RATE" packageGroupCode="IN-BF-C">
-        <hc:Description>
-            <c:Text>
-                <c:TextElement>Internal Food- Breakfast- Children</c:TextElement>
-            </c:Text>
-        </hc:Description>
-        <hc:ShortDescription>
-            <c:Text>
-                <c:TextElement>Internal Food- Breakfast- Children</c:TextElement>
-            </c:Text>
-        </hc:ShortDescription>
-    </hc:Package>
-    <hc:Package packageCode="IN-MINBAR" source="RATE">
-        <hc:Description>
-            <c:Text>
-                <c:TextElement>Internal -Minibar</c:TextElement>
-            </c:Text>
-        </hc:Description>
-        <hc:ShortDescription>
-            <c:Text>
-                <c:TextElement>Internal -Minibar</c:TextElement>
-            </c:Text>
-        </hc:ShortDescription>
-    </hc:Package>
-</hc:Packages>
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing">
+    <soap:Header>
+        <OGHeader transactionID="00326787" timeStamp="2009-03-14T02:48:16.071875+07:00" primaryLangID="E" xmlns="http://webservices.micros.com/og/4.3/Core/">
+            abc
+        </OGHeader>
+        <wsa:Action>http://webservices.micros.com/ows/5.1/Reservation.wsdl#FetchBookingResponse</wsa:Action>
+        <wsa:MessageID>urn:uuid:c0daec78-e230-481f-8309-451641540301</wsa:MessageID>
+        <wsa:RelatesTo>urn:uuid:41824fb6-dd8d-48cf-adda-dde4ea4d98f1</wsa:RelatesTo>
+        <wsa:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</wsa:To>
+    </soap:Header>
+    <wsa:Actions>
+        <wsa:Actionxx>
+            1
+        </wsa:Actionxx>
+        <wsa:Actionxx>2</wsa:Actionxx>
+        <wsa:Actionxx>3</wsa:Actionxx>
+    </wsa:Actions>
+</soap:Envelope>
