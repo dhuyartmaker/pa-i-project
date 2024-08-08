@@ -32,7 +32,7 @@ export class UserController {
       sameSite: 'none',
       maxAge: parseInt(this.configService.get('JWT_EXPIRE').slice(0, -1)) * 24 * 3600 * 1000,
     });
-    return { accessToken, refreshToken };
+    return true;
   }
 
   @Post('logout')
@@ -44,7 +44,7 @@ export class UserController {
     return this.userService.register(body)
   }
 
-  @Post('refresh-token')
+  @Get('refresh-token')
   async refreshToken(
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request
