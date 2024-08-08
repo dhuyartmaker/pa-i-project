@@ -170,14 +170,13 @@ class XmlService {
   }
 
   queryObject(obj, query) {
-    const keys = query.split('.'); // Tách các phần của query theo dấu "."
+    const keys = query.split('.');
 
     function findValue(currentObj, remainingKeys) {
       if (!currentObj || remainingKeys.length === 0) return undefined;
 
       const [key, ...restKeys] = remainingKeys;
 
-      // Nếu currentObj là mảng, duyệt qua từng phần tử của mảng
       if (Array.isArray(currentObj)) {
         for (let item of currentObj) {
           const found = findValue(item, remainingKeys);
@@ -186,15 +185,13 @@ class XmlService {
         return undefined;
       }
 
-      // Nếu key tồn tại trong currentObj, tiếp tục tìm kiếm trong phần con
       if (key in currentObj) {
         if (restKeys.length === 0) {
-          return currentObj[key]; // Nếu đây là key cuối cùng, trả về giá trị
+          return currentObj[key];
         }
         return findValue(currentObj[key], restKeys);
       }
 
-      // Nếu key không tồn tại ở cấp hiện tại, tiếp tục tìm kiếm trong các phần con
       for (let subKey in currentObj) {
         if (typeof currentObj[subKey] === 'object') {
           const found = findValue(currentObj[subKey], remainingKeys);
@@ -268,6 +265,16 @@ class XmlService {
     }
 
     return bookingInfo;
+  }
+
+  async readRaw(bookingCode: string) {
+    const absolutePath = path.join('xml_files', `booking_${bookingCode}.xml`);
+    const readXml = readFileSync(absolutePath, 'utf8');
+
+    let stringXml = `${readXml.trim()}`.replace(/(\<\?.*\?\>)/g, ''); // Remove head <?*?>
+
+    const result = this.processingXml(stringXml);
+    return result
   }
 }
 

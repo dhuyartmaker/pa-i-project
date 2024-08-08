@@ -32,6 +32,11 @@ export class XmlController {
     return this.xmlService.read(param['confirmCode'])
   }
 
+  @Get('booking/:confirmCode/raw')
+  async getXmlRaw(@Param() param: any) {
+    return this.xmlService.readRaw(param['confirmCode'])
+  }
+
   @Get('payment/:confirmCode')
   async createOrder(@Param() param: any) {
     const xmlObject = await this.xmlService.read(param['confirmCode']);
@@ -48,8 +53,8 @@ export class XmlController {
       "buyer_email": xmlObject.email || "duchuy2411itd@gmail.com",
       "buyer_mobile": xmlObject.phone_number || "0398911205",
       "buyer_address": "Ben Tre",
-      "return_url": "http://localhost:3000/payment-success",
-      "cancel_url": "http://localhost:3000/payment-cancel",
+      "return_url": `http://localhost:${this.configService.get("PORT") || 3000}/payment-success`,
+      "cancel_url": `http://localhost:${this.configService.get("PORT") || 3000}/payment-cancel`,
       "notify_url": "",
       "language": "vi",
     }
