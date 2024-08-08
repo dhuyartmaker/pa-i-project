@@ -103,8 +103,8 @@ In result you will see data with format:
 	- If is Open Tag, get innerTag value, push tag it into **st_tag** and innerTag to **st_res**
 	- If is Close Tag, i pop the number of child node as **count** out side  and assign to parent object, push it to **st_res** 
 	- If is Single Tag, get innerTag value, and push innerTag to **st_res**
-	But my big problems is recognize child tag is element of array. So i use variable **tagOpenBefore** to remember previously opened tag if current tag is same as **tagOpenBefore**, i mark parent object is Array. Thank to that, i know should to push or assign attributes to parent object.
-	My algorithm deal with case that parent tag has name same as name of child tag thank to object **count** does not have format {"tag_name": 5} , it has format { "tag_name": [2,4,5] } , if i meet same name tag, i will push the number of child node and use it to count until i meet close tag, pop it and use the number of child node remain in array.
+		- But my big problems is recognize child tag is element of array. So i use variable **tagOpenBefore** to remember previously opened tag if current tag is same as **tagOpenBefore**, i mark parent object is Array. Thank to that, i know should to push or assign attributes to parent object.
+		- My algorithm deal with case that parent tag has name same as name of child tag thank to object **count** does not have format {"tag_name": 5} , it has format { "tag_name": [2,4,5] } , if i meet same name tag, i will push the number of child node and use it to count until i meet close tag, pop it and use the number of child node remain in array.
 - **2) Until end of file**
 	- Loop until end of file and i get result.
 	- Use query nested follow format "a.b", this will find attribute **b** which have ancesto attribute is **a**.
