@@ -57,10 +57,10 @@ This module use Postment to testing
 
 #### Payment
 Please use browser to testing
-[**GET**] Payment: http://localhost:3000/payment/:confirmCode
-	*Ensure you are authenticated! If created order successfully, copy **checkout_url** from response and access it. 
-	Following VCB guide to pay order (Can use ATM Card with EXB Bank).
-	After payment, VCB Payment Web will redirect you to my result page!*
+-  [**GET**] Payment: http://localhost:3000/payment/:confirmCode
+			*Ensure you are authenticated! If created order successfully, copy **checkout_url** from response and access it. 
+			Following VCB guide to pay order (Can use ATM Card with EXB Bank).
+			After payment, VCB Payment Web will redirect you to my result page!*
 
 ## XML-Algorithm
 *Apologize for result of XML can be not match with test case, because i don't understand business of Booking XML and don't have sample XML match result of this XML.
