@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserModel } from './auth.model';
 import { FindOptions, Optional } from 'sequelize';
 import * as bcrypt from 'bcrypt'
@@ -27,6 +27,20 @@ class UserService {
     return this.userRepository.create(values)
   }
 
+  public async createTokenPair(userPayload: Record<string,any>) {
+    const accessToken = this.jwtService.sign({ ...userPayload }, {
+      secret: this.configService.get('JWT_KEY'),
+      expiresIn: `${this.configService.get('JWT_EXPIRE')}`
+    });
+
+    const refreshToken = this.jwtService.sign({ ...userPayload }, {
+      secret: this.configService.get('JWT_REFRESH_KEY'),
+      expiresIn: `${this.configService.get('JWT_REFRESH_EXPIRE')}`
+    });
+
+    return { accessToken, refreshToken }
+  }
+
   public async signIn(email: string, password: string) {
     const holdUser = await this.userRepository.findOne({ where: { email }});
     if (!holdUser) {
@@ -44,15 +58,8 @@ class UserService {
       email,
       moreInfo: '.............'
     }
-    const accessToken = this.jwtService.sign({ ...userPayload }, {
-      secret: this.configService.get('JWT_KEY'),
-      expiresIn: `${this.configService.get('JWT_EXPIRE')}`
-    });
-
-    const refreshToken = this.jwtService.sign({ ...userPayload }, {
-      secret: this.configService.get('JWT_REFRESH_KEY'),
-      expiresIn: `${this.configService.get('JWT_REFRESH_EXPIRE')}`
-    });
+    const { accessToken, refreshToken } = await this.createTokenPair(userPayload);
+    await holdUser.update({ refreshToken: await this.hashRefreshToken(refreshToken, 10) });
 
     return {accessToken, refreshToken}
   }
@@ -75,35 +82,43 @@ class UserService {
     return holdUser;
   }
 
-  public async refreshToken(email: string, password: string) {
-    const holdUser = await this.userRepository.findOne({ where: { email }});
-    if (!holdUser) {
-      throw new HttpException('Email or password is incorrect!', HttpStatus.UNAUTHORIZED);
-    }
+  public async refreshToken(refreshToken: string) {
+    const decodeToken = this.jwtService.decode(refreshToken);
+    const userId = decodeToken.id;
+    if (!userId) throw new UnauthorizedException('User not found!')
 
-    const isValid = await bcrypt.compare(password, holdUser.dataValues.password);
+    const userFromDB = await this.userRepository.findOne({
+      where: { id: userId },
+      attributes: ['id', 'email', 'refreshToken']
+    });
+    if (!userFromDB) throw new UnauthorizedException('User not found!')
 
-    if (!isValid) {
-      throw new HttpException('Email or password is incorrect!', HttpStatus.UNAUTHORIZED);
-    }
+    const compareToken = await bcrypt.compare(refreshToken, userFromDB.dataValues.refreshToken)
+    if (!compareToken) throw new UnauthorizedException('Token fail!')
 
     const userPayload = {
-      id: holdUser.dataValues.id,
-      email,
+      id: userFromDB.dataValues.id,
+      email: userFromDB.dataValues.email,
       moreInfo: '.............'
     }
-    const accessToken = this.jwtService.sign({ ...userPayload }, {
-      secret: this.configService.get('JWT_KEY'),
-      expiresIn: `${this.configService.get('JWT_EXPIRE')}`
-    });
 
-    const refreshToken = this.jwtService.sign({ ...userPayload }, {
-      secret: this.configService.get('JWT_REFRESH_KEY'),
-      expiresIn: `${this.configService.get('JWT_REFRESH_EXPIRE')}`
-    });
+    const { accessToken, refreshToken: newRefreshToken } = await this.createTokenPair(userPayload);
+    await userFromDB.update({ refreshToken:  newRefreshToken })
 
-    return {accessToken, refreshToken}
+    return {
+      accessToken,
+      refreshToken: newRefreshToken
+    }
   }
+
+  public async hashRefreshToken (
+    refreshToken: string,
+    saltNumber: number,
+  ) {
+    const salt = await bcrypt.genSalt(saltNumber);
+    const refeshTokenHashed = await bcrypt.hash(refreshToken, salt)
+    return refeshTokenHashed;
+  };
 }
 
 export default UserService;

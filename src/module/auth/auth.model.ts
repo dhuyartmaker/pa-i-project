@@ -23,6 +23,9 @@ export class UserModel extends Model {
 
   @Column
   email?: string;
+
+  @Column
+  refreshToken?: string;
 }
 
 export const UserProviders = [

@@ -1,0 +1,62 @@
+<hc:Packages>
+    <hc:Package packageCode="IN-BF-B-A" source="RATE" packageGroupCode="IN-BF-A">
+        <hc:Description>
+            <c:Text>
+                <c:TextElement>Internal Beverage- Breakfast- Adult</c:TextElement>
+            </c:Text>
+        </hc:Description>
+        <hc:ShortDescription>
+            <c:Text>
+                <c:TextElement>Internal Beverage- Breakfast- Adult</c:TextElement>
+            </c:Text>
+        </hc:ShortDescription>
+    </hc:Package>
+    <hc:Package packageCode="IN-BF-B-C" source="RATE" packageGroupCode="IN-BF-C">
+        <hc:Description>
+            <c:Text>
+                <c:TextElement>Internal Beverage- Breakfast - Children</c:TextElement>
+            </c:Text>
+        </hc:Description>
+        <hc:ShortDescription>
+            <c:Text>
+                <c:TextElement>Internal Beverage- Breakfast - Children</c:TextElement>
+            </c:Text>
+        </hc:ShortDescription>
+    </hc:Package>
+    <hc:Package packageCode="IN-BF-F-A" source="RATE" packageGroupCode="IN-BF-A">
+        <hc:Description>
+            <c:Text>
+                <c:TextElement>Internal Food- Breakfast- Adult</c:TextElement>
+            </c:Text>
+        </hc:Description>
+        <hc:ShortDescription>
+            <c:Text>
+                <c:TextElement>Internal Food- Breakfast- Adult</c:TextElement>
+            </c:Text>
+        </hc:ShortDescription>
+    </hc:Package>
+    <hc:Package packageCode="IN-BF-F-C" source="RATE" packageGroupCode="IN-BF-C">
+        <hc:Description>
+            <c:Text>
+                <c:TextElement>Internal Food- Breakfast- Children</c:TextElement>
+            </c:Text>
+        </hc:Description>
+        <hc:ShortDescription>
+            <c:Text>
+                <c:TextElement>Internal Food- Breakfast- Children</c:TextElement>
+            </c:Text>
+        </hc:ShortDescription>
+    </hc:Package>
+    <hc:Package packageCode="IN-MINBAR" source="RATE">
+        <hc:Description>
+            <c:Text>
+                <c:TextElement>Internal -Minibar</c:TextElement>
+            </c:Text>
+        </hc:Description>
+        <hc:ShortDescription>
+            <c:Text>
+                <c:TextElement>Internal -Minibar</c:TextElement>
+            </c:Text>
+        </hc:ShortDescription>
+    </hc:Package>
+</hc:Packages>
