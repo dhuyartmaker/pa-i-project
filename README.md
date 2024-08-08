@@ -94,10 +94,10 @@ In result you will see data with format:
 - ***array*** will save if this tag have many same name child tag
 ### Idea
 - Using Iterator to loop entire file and use Stack Struct to save each \<tag\>. 
-So BigO is **O(n)** with n is length of file.
-Have 3 tag type: Open \<open\> , Single \<single \/\> and Closing \<\close>. 
-Similar ideal of _Polish notation_ , i use stack to save Open Tag until i meet Close Tag, pop it outside and assign to object.
-I have 2 Stack, one to save tag **st_tag**, one to save object result **st_res**. A object **count** to count child node of each tag.
+- So BigO is **O(n)** with n is length of file.
+- Have 3 tag type: Open \<open\> , Single \<single \/\> and Closing \<\close>. 
+- Similar ideal of _Polish notation_ , i use stack to save Open Tag until i meet Close Tag, pop it outside and assign to object.
+- I have 2 Stack, one to save tag **st_tag**, one to save object result **st_res**. A object **count** to count child node of each tag.
 ### Step:
 - **1) Loop file and find the next tag**
 	- If is Open Tag, get innerTag value, push tag it into **st_tag** and innerTag to **st_res**
